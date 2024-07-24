@@ -1,0 +1,15 @@
+<canvas>
+	<div>
+		<span fg="#f3faf3" bg="#1a1f3a">
+			<span modifiers="bold">
+				hello bold
+			</span>
+			<span modifiers="underline" bg="none" fg="rgb(133, 51, 69)">
+				hello underline
+			</span>
+			<span reset="true">
+				reset
+			</span>
+		</span>
+	</div>
+</canvas>

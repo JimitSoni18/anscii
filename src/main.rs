@@ -1,10 +1,20 @@
 use std::io::BufRead;
 
 fn main() -> Result<(), anscii::Error> {
-	let args = std::env::args();
+	let args: Vec<String> = std::env::args().collect();
 
-	if args.len() == 1 {
-		println!("{}", from_input()?);
+	match args.len() {
+		1 => println!("{}", from_input()?),
+        2 => println!("{}", anscii::parse(&args[1])?),
+		3 => {
+			match args[2].as_ref() {
+				"-f" | "--file" => {
+					println!("{}", anscii::parse(include_str!("../assets/sample.xml"))?);
+				}
+				_ => eprint!("too many arguments"),
+			}
+		}
+		_ => eprint!("too many / few arguments"),
 	}
 
 	Ok(())

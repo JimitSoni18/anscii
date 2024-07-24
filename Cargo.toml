@@ -4,5 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+col-rs = { git = "https://github.com/JimitSoni18/col-rs.git", version = "0.1.2" }
 roxmltree = "0.20.0"
 thiserror = "1.0.63"
