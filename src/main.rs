@@ -3,17 +3,21 @@ use std::io::BufRead;
 fn main() -> Result<(), anscii::Error> {
 	let args: Vec<String> = std::env::args().collect();
 
-	match args.len() {
+	let len = args.len();
+	println!("{len}");
+
+	match len {
 		1 => println!("{}", from_input()?),
-        2 => println!("{}", anscii::parse(&args[1])?),
-		3 => {
-			match args[2].as_ref() {
-				"-f" | "--file" => {
-					println!("{}", anscii::parse(include_str!("../assets/sample.xml"))?);
-				}
-				_ => eprint!("too many arguments"),
+		2 => println!("{}", anscii::parse(&args[1])?),
+		3 => match args[1].as_ref() {
+			"-f" | "--file" => {
+				println!(
+					"{}",
+					anscii::parse(&std::fs::read_to_string(&args[2]).unwrap())?
+				);
 			}
-		}
+			other => eprint!("what is this: {other}"),
+		},
 		_ => eprint!("too many / few arguments"),
 	}
 

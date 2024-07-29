@@ -14,7 +14,6 @@ dependencies = [
 [[package]]
 name = "col-rs"
 version = "0.1.2"
-source = "git+https://github.com/JimitSoni18/col-rs.git#731fb57b091cf6915803c8fe3dd9607545bd57e8"
 dependencies = [
  "thiserror",
 ]
