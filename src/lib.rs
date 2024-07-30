@@ -1,47 +1,73 @@
 use std::collections::HashSet;
 
 use col_rs::{hex_to_rgb, Span, Style, Weight, RGB};
-use roxmltree::{Attribute, Node, Document};
+use roxmltree::{Attribute, Document, Node};
+
+// TODO: implement nested divs, and validate for divs inside of spans
 
 pub fn parse(input: &str) -> Result<String, Error> {
 	let doc = Document::parse(input)?;
+    let mut par_str = String::new();
 
-	Ok(format!("{:#?}", doc))
+	for child in doc.root_element().children() {
+		let mut slice = String::new();
+		something_like_infix_traversal(
+			child,
+			parse_attr(child.attributes().collect(), Style::default())?,
+			&mut slice,
+		)?;
+        if child.tag_name().name() == "div" {
+            par_str.push('\n');
+        }
+		par_str.push_str(&slice);
+	}
+
+	Ok(format!("{par_str}"))
 }
 
-#[allow(unused)]
 fn something_like_infix_traversal<'a, 'input>(
 	node: Node<'a, 'input>,
-	weight: Weight,
 	style: Style,
-) -> Vec<Node<'a, 'input>> {
+	styled_string: &mut String,
+) -> Result<(), Error> {
 	for child in node.children() {
 		if child.is_text() {
+            let text = child.text().unwrap_or_default().trim_matches(['\t', '\n']);
+            // this looks like it could be faster
+			// text = text.trim_matches(|c| c == '\t' && c == '\n');
+			if !text.is_empty() {
+				let span = Span::with_style(text.to_string(), style.clone());
+				styled_string.push_str(&format!("{span}"));
+			}
 		} else if child.is_element() {
-			parse_attr(child.attributes().collect());
+            // FIXME: fix unwrap
+			let style = parse_attr(child.attributes().collect(), style.clone())?;
+			something_like_infix_traversal(child, style, styled_string)?;
 		}
 	}
-	todo!()
+
+    Ok(())
 }
 
-fn parse_attr(attrs: Vec<Attribute>) -> Result<Style, Error> {
-	let mut style = Style::default();
+fn parse_attr(attrs: Vec<Attribute>, mut style: Style) -> Result<Style, Error> {
 	for attr in attrs {
 		match attr.name() {
 			"fg" => {
-				// TODO: add reset fg option
 				let fg = attr.value();
 				if fg == "none" {
+					style.reset_fg();
 				} else {
-					style = style.fg(parse_color(fg)?);
+					let [r, g, b] = parse_color(fg)?;
+					style.set_fg(r, g, b);
 				}
 			}
 			"bg" => {
-				// TODO: add reset bg option
 				let bg = attr.value();
 				if bg == "none" {
+					style.reset_bg();
 				} else {
-					style = style.bg(parse_color(attr.value())?);
+					let [r, g, b] = parse_color(bg)?;
+					style = style.bg(r, g, b);
 				}
 			}
 			// TODO: use strum macros
@@ -52,8 +78,13 @@ fn parse_attr(attrs: Vec<Attribute>) -> Result<Style, Error> {
 					.split(',')
 					.map(str::trim)
 					.collect::<HashSet<&str>>();
+
 				let bold = modifiers.contains("bold");
 				let faint = modifiers.contains("faint");
+				let underline = modifiers.contains("underline");
+				let strike_through = modifiers.contains("strike-through");
+				let italic = modifiers.contains("italic");
+
 				if bold && faint {
 					return Err(Error::ConflictingModifiers);
 				}
@@ -64,19 +95,26 @@ fn parse_attr(attrs: Vec<Attribute>) -> Result<Style, Error> {
 					style = style.weight(Weight::Faint);
 				}
 
-				if modifiers.contains("underline") {
+				if underline {
 					style = style.underline();
 				}
-				if modifiers.contains("strike-through") {
+
+				if strike_through {
 					style = style.strike_through();
 				}
+
+				if italic {
+					style = style.italic();
+				}
+
+				if modifiers.contains("reset") {
+					if bold || faint || underline || strike_through || italic {
+						return Err(Error::ConflictingModifiers);
+					}
+					style.reset();
+				}
 			}
-			other => {
-				eprintln!(
-					"{}",
-					Span::new(format!("unknown modifier: {other}")).fg((229, 192, 123))
-				);
-			}
+			_ => {}
 		}
 	}
 
@@ -86,14 +124,13 @@ fn parse_attr(attrs: Vec<Attribute>) -> Result<Style, Error> {
 fn parse_color(code: &str) -> Result<RGB, Error> {
 	if let Some(rest) = code.strip_prefix("rgb(") {
 		if let Some(rest) = rest.strip_suffix(')') {
-			let colors: Vec<u8> = rest
+			return rest
 				.split(',')
 				.map(|n| n.trim().parse())
 				.collect::<Result<Vec<u8>, std::num::ParseIntError>>()
-				.map_err(|_| Error::ColorParseError(code.to_string()))?;
-			if colors.len() == 3 {
-				return Ok((colors[0], colors[1], colors[2]));
-			}
+				.map_err(|_| Error::ColorParseError(code.to_string()))?
+				.try_into()
+				.map_err(|_| Error::ColorParseError(code.to_string()));
 		}
 		return Err(Error::ColorParseError(code.to_string()));
 	} else {
@@ -107,6 +144,16 @@ pub enum Error {
 	TreeParseError(#[from] roxmltree::Error),
 	#[error("unable to parse color: {0}")]
 	ColorParseError(String),
-    #[error("conflicting modifiers")]
+	#[error("conflicting modifiers")]
 	ConflictingModifiers,
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+	#[test]
+	fn test_parse_color() {
+		let parsed = parse_color("rgb(213, 33, 54)").unwrap();
+		println!("{parsed:?}");
+	}
 }

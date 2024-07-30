@@ -1,0 +1,16 @@
+<!-- tried to make tux :| -->
+<canvas>
+  <div>      <span fg="#ffffff">###</span>      </div>
+  <div>    <span fg="#ffffff">#######</span>    </div>
+  <div>   <span fg="#ffffff">#########</span>   </div>
+  <div>  <span fg="#ffffff">###########</span>  </div>
+  <div> <span fg="#ffffff">#############</span> </div>
+  <div> <span fg="#ffffff">#############</span> </div>
+  <div> <span fg="#ffffff">#############</span> </div>
+  <div>  <span fg="#ffffff">#####</span><span fg="#000000">00</span><span fg="#ffffff">#####</span>  </div>
+  <div>  <span fg="#ffffff">#####</span><span fg="#ffa500">@@</span><span fg="#ffffff">#####</span>  </div>
+  <div>   <span fg="#ffffff">####</span><span fg="#ffa500">@@</span><span fg="#ffffff">####</span>   </div>
+  <div>  <span fg="#ffa500">@@</span><span fg="#ffffff">########</span><span fg="#ffa500">@@</span>  </div>
+  <div> <span fg="#ffa500">@@@@</span><span fg="#ffffff">#####</span><span fg="#ffa500">@@@@</span> </div>
+  <div><span fg="#ffa500">@@@@@@</span>   <span fg="#ffa500">@@@@@@</span></div>
+</canvas>

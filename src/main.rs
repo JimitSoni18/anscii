@@ -4,7 +4,6 @@ fn main() -> Result<(), anscii::Error> {
 	let args: Vec<String> = std::env::args().collect();
 
 	let len = args.len();
-	println!("{len}");
 
 	match len {
 		1 => println!("{}", from_input()?),
